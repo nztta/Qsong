@@ -1,0 +1,12 @@
+specVersion: "v1"
+serviceId: "qsong"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "fdcdb"
+      cloudSql:
+        instanceId: "qsong-fdc"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
