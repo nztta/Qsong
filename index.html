@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Queue - จัดคิวเพลงร่วมกัน</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .price-display {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .room-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info-item .label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+
+        .info-item .value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .queue-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .queue-item.current {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-left-color: #28a745;
+        }
+
+        .queue-item .song-info {
+            flex: 1;
+        }
+
+        .queue-item .song-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .queue-item .song-added-by {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .queue-item.current .song-added-by {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .queue-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .youtube-player {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .qr-code {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .qr-code canvas {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 10px;
+            background: white;
+        }
+
+        .share-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: #28a745;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .timer.warning {
+            color: #ffc107;
+            animation: pulse 1s infinite;
+        }
+
+        .timer.critical {
+            color: #dc3545;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .guest-form {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .pending-requests {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .request-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #e9ecef;
+            border-radius: 8px;
+        }
+
+        .disclaimer {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .room-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .share-options {
+                flex-direction: column;
+            }
+            
+            .queue-controls {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 Music Queue</h1>
+            <p>จัดคิวเพลงร่วมกันสำหรับห้องคาราโอเกะ ห้องซ้อม และสถานที่สังสรรค์</p>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="homeScreen" class="card">
+            <h2>เริ่มต้นใช้งาน</h2>
+            <div style="display: flex; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+                <button class="btn" onclick="showCreateRoom()">🏠 สร้างห้องใหม่</button>
+                <button class="btn btn-secondary" onclick="showJoinRoom()">🔗 เข้าร่วมห้อง</button>
+            </div>
+        </div>
+
+        <!-- Create Room Screen -->
+        <div id="createRoomScreen" class="card hidden">
+            <h2>สร้างห้องใหม่</h2>
+            <div class="input-group">
+                <label>ชื่อห้อง</label>
+                <input type="text" id="roomName" placeholder="ห้องคาราโอเกะของเรา" value="ห้องคาราโอเกะของเรา">
+            </div>
+            <div class="input-group">
+                <label>เวลาเช่า (ชั่วโมง)</label>
+                <select id="rentalHours" onchange="calculatePrice()">
+                    <option value="1">1 ชั่วโมง</option>
+                    <option value="2">2 ชั่วโมง</option>
+                    <option value="3">3 ชั่วโมง</option>
+                    <option value="4">4 ชั่วโมง</option>
+                    <option value="5">5 ชั่วโมง</option>
+                    <option value="6">6 ชั่วโมง</option>
+                    <option value="8">8 ชั่วโมง</option>
+                </select>
+            </div>
+            <div id="priceDisplay" class="price-display">
+                ค่าใช้จ่าย: 20 บาท
+            </div>
+            <div class="input-group">
+                <label>
+                    <input type="checkbox" id="enableGuestForm" style="width: auto; margin-right: 10px;">
+                    เปิดใช้งานฟอร์มเข้าห้อง (ป้องกัน Spam)
+                </label>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="createRoom()">สร้างห้อง</button>
+                <button class="btn btn-secondary" onclick="showHome()">ยกเลิก</button>
+            </div>
+        </div>
+
+        <!-- Join Room Screen -->
+        <div id="joinRoomScreen" class="card hidden">
+            <h2>เข้าร่วมห้อง</h2>
+            <div class="input-group">
+                <label>รหัสห้อง</label>
+                <input type="text" id="joinRoomId" placeholder="กรอกรหัสห้อง">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="joinRoom()">เข้าร่วม</button>
+                <button class="btn btn-secondary" onclick="showHome()">ยกเลิก</button>
+            </div>
+        </div>
+
+        <!-- Guest Form Screen -->
+        <div id="guestFormScreen" class="card hidden">
+            <h2>ขอเข้าร่วมห้อง</h2>
+            <div class="guest-form">
+                <p>ห้องนี้ต้องการการอนุมัติก่อนเข้าใช้งาน</p>
+            </div>
+            <div class="input-group">
+                <label>ชื่อเล่น</label>
+                <input type="text" id="guestName" placeholder="กรอกชื่อเล่น">
+            </div>
+            <div class="input-group">
+                <label>เหตุผลที่เข้าห้อง (ไม่บังคับ)</label>
+                <input type="text" id="guestReason" placeholder="อยากร้องเพลงด้วย">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn" onclick="submitGuestRequest()">ส่งคำขอ</button>
+                <button class="btn btn-secondary" onclick="showHome()">ยกเลิก</button>
+            </div>
+        </div>
+
+        <!-- Main Room Screen -->
+        <div id="roomScreen" class="card hidden">
+            <div class="room-info">
+                <div class="info-item">
+                    <div class="label">ห้อง</div>
+                    <div class="value" id="currentRoomName">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="label">เวลาคงเหลือ</div>
+                    <div class="value timer" id="timeRemaining">-</div>
+                </div>
+            </div>
+
+            <!-- Master Controls -->
+            <div id="masterControls" class="hidden">
+                <h3>🎛️ ควบคุมห้อง</h3>
+                <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" onclick="showShareOptions()">📤 แชร์ห้อง</button>
+                    <button class="btn btn-secondary" onclick="showExtendTime()">⏰ ต่อเวลา</button>
+                    <button class="btn btn-secondary" onclick="showTransferMaster()">👑 โอนสิทธิ์</button>
+                    <button class="btn btn-secondary" onclick="toggleGuestForm()">🛡️ ตั้งค่าเข้าห้อง</button>
+                </div>
+                
+                <!-- Pending Requests -->
+                <div id="pendingRequestsSection" class="hidden">
+                    <h4>คำขอเข้าห้อง</h4>
+                    <div id="pendingRequests" class="pending-requests"></div>
+                </div>
+            </div>
+
+            <!-- YouTube Player -->
+            <div id="playerSection">
+                <div id="ytPlayer" class="youtube-player"></div>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <button class="btn" onclick="playNext()" id="playNextBtn">⏭️ เล่นเพลงถัดไป</button>
+                </div>
+            </div>
+
+            <!-- Add Song -->
+            <div>
+                <h3>🎵 เพิ่มเพลง</h3>
+                <div class="input-group">
+                    <label>ลิงก์ YouTube</label>
+                    <input type="text" id="songUrl" placeholder="https://www.youtube.com/watch?v=..." onkeypress="handleSongUrlEnter(event)">
+                </div>
+                <div class="input-group">
+                    <label>ชื่อผู้เพิ่ม</label>
+                    <input type="text" id="addedBy" placeholder="ชื่อของคุณ">
+                </div>
+                <button class="btn" onclick="addSong()">➕ เพิ่มเพลง</button>
+            </div>
+
+            <!-- Queue -->
+            <div style="margin-top: 30px;">
+                <h3>📋 คิวเพลง</h3>
+                <div id="songQueue"></div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-danger" onclick="leaveRoom()">🚪 ออกจากห้อง</button>
+            </div>
+        </div>
+
+        <!-- Share Options Modal -->
+        <div id="shareModal" class="card hidden">
+            <h3>แชร์ห้อง</h3>
+            <div class="input-group">
+                <label>รหัสห้อง</label>
+                <input type="text" id="shareRoomId" readonly>
+                <button class="btn btn-secondary" onclick="copyRoomId()" style="margin-top: 10px;">📋 คัดลอก</button>
+            </div>
+            <div class="input-group">
+                <label>ลิงก์ห้อง</label>
+                <input type="text" id="shareRoomUrl" readonly>
+                <button class="btn btn-secondary" onclick="copyRoomUrl()" style="margin-top: 10px;">📋 คัดลอก</button>
+            </div>
+            <div class="qr-code">
+                <div>สแกน QR Code เพื่อเข้าห้อง</div>
+                <canvas id="qrCode"></canvas>
+            </div>
+            <button class="btn btn-secondary" onclick="hideShareOptions()">ปิด</button>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            <strong>ข้อจำกัดความรับผิดชอบ:</strong> แอปนี้ไม่มีการจัดเก็บหรือสตรีมเพลงใด ๆ เพลงทั้งหมดเล่นผ่าน YouTube ซึ่งอยู่ภายใต้ลิขสิทธิ์ของ YouTube และเจ้าของเพลงนั้น ๆ
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Global variables
+        let currentRoom = null;
+        let isMaster = false;
+        let userId = generateUserId();
+        let ytPlayer = null;
+        let currentSongIndex = 0;
+        let timeRemaining = 0;
+        let timerInterval = null;
+
+        // Generate unique user ID
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Screen navigation
+        function showHome() {
+            hideAllScreens();
+            document.getElementById('homeScreen').classList.remove('hidden');
+        }
+
+        function showCreateRoom() {
+            hideAllScreens();
+            document.getElementById('createRoomScreen').classList.remove('hidden');
+            calculatePrice();
+        }
+
+        function showJoinRoom() {
+            hideAllScreens();
+            document.getElementById('joinRoomScreen').classList.remove('hidden');
+        }
+
+        function hideAllScreens() {
+            const screens = ['homeScreen', 'createRoomScreen', 'joinRoomScreen', 'guestFormScreen', 'roomScreen', 'shareModal'];
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
+        }
+
+        // Price calculation
+        function calculatePrice() {
+            const hours = parseInt(document.getElementById('rentalHours').value);
+            const pricePerHour = hours >= 4 ? 15 : 20;
+            const totalPrice = hours * pricePerHour;
+            
+            document.getElementById('priceDisplay').innerHTML = `
+                ค่าใช้จ่าย: ${totalPrice} บาท
+                ${hours >= 4 ? '<br><small>ส่วนลด 4 ชั่วโมงขึ้นไป!</small>' : ''}
+            `;
+        }
+
+        // Create room
+        function createRoom() {
+            const roomName = document.getElementById('roomName').value.trim();
+            const hours = parseInt(document.getElementById('rentalHours').value);
+            const enableGuestForm = document.getElementById('enableGuestForm').checked;
+            
+            if (!roomName) {
+                showNotification('กรุณากรอกชื่อห้อง', 'error');
+                return;
+            }
+
+            // Generate room ID
+            const roomId = generateRoomId();
+            
+            // Create room object
+            currentRoom = {
+                id: roomId,
+                name: roomName,
+                masterId: userId,
+                hours: hours,
+                enableGuestForm: enableGuestForm,
+                startTime: Date.now(),
+                endTime: Date.now() + (hours * 60 * 60 * 1000),
+                queue: [],
+                members: [userId],
+                pendingRequests: []
+            };
+
+            isMaster = true;
+            timeRemaining = hours * 60 * 60 * 1000; // Convert to milliseconds
+            
+            showRoom();
+            startTimer();
+            showNotification('สร้างห้องสำเร็จ!', 'success');
+        }
+
+        function generateRoomId() {
+            return Math.random().toString(36).substr(2, 8).toUpperCase();
+        }
+
+        // Join room
+        function joinRoom() {
+            const roomId = document.getElementById('joinRoomId').value.trim().toUpperCase();
+            
+            if (!roomId) {
+                showNotification('กรุณากรอกรหัสห้อง', 'error');
+                return;
+            }
+
+            // Simulate room lookup
+            const mockRoom = {
+                id: roomId,
+                name: 'ห้องทดสอบ',
+                masterId: 'other_user',
+                hours: 2,
+                enableGuestForm: Math.random() > 0.5,
+                startTime: Date.now() - (30 * 60 * 1000), // Started 30 mins ago
+                endTime: Date.now() + (90 * 60 * 1000), // 1.5 hours remaining
+                queue: [],
+                members: ['other_user'],
+                pendingRequests: []
+            };
+
+            if (mockRoom.enableGuestForm) {
+                currentRoom = mockRoom;
+                showGuestForm();
+            } else {
+                currentRoom = mockRoom;
+                currentRoom.members.push(userId);
+                isMaster = false;
+                timeRemaining = mockRoom.endTime - Date.now();
+                showRoom();
+                startTimer();
+                showNotification('เข้าร่วมห้องสำเร็จ!', 'success');
+            }
+        }
+
+        // Guest form
+        function showGuestForm() {
+            hideAllScreens();
+            document.getElementById('guestFormScreen').classList.remove('hidden');
+        }
+
+        function submitGuestRequest() {
+            const name = document.getElementById('guestName').value.trim();
+            const reason = document.getElementById('guestReason').value.trim();
+            
+            if (!name) {
+                showNotification('กรุณากรอกชื่อเล่น', 'error');
+                return;
+            }
+
+            // Add to pending requests
+            currentRoom.pendingRequests.push({
+                userId: userId,
+                name: name,
+                reason: reason,
+                timestamp: Date.now()
+            });
+
+            showNotification('ส่งคำขอแล้ว รอการอนุมัติ...', 'success');
+            
+            // Simulate approval after 3 seconds
+            setTimeout(() => {
+                currentRoom.members.push(userId);
+                isMaster = false;
+                timeRemaining = currentRoom.endTime - Date.now();
+                showRoom();
+                startTimer();
+                showNotification('ได้รับการอนุมัติแล้ว!', 'success');
+            }, 3000);
+        }
+
+        // Show room
+        function showRoom() {
+            hideAllScreens();
+            document.getElementById('roomScreen').classList.remove('hidden');
+            
+            // Update room info
+            document.getElementById('currentRoomName').textContent = currentRoom.name;
+            
+            // Show master controls if user is master
+            if (isMaster) {
+                document.getElementById('masterControls').classList.remove('hidden');
+                updatePendingRequests();
+            }
+
+            // Initialize YouTube player
+            initYouTubePlayer();
+            
+            // Update queue display
+            updateQueueDisplay();
+        }
+
+        // Timer functions
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                timeRemaining -= 1000;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 15 * 60 * 1000 && timeRemaining > 14 * 60 * 1000) {
+                    // 15 minutes warning
+                    if (isMaster) {
+                        showNotification('เหลือเวลา 15 นาที! ต้องการต่อเวลาหรือไม่?', 'warning');
+                    }
+                }
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    endSession();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60000);
+            const seconds = Math.floor((timeRemaining % 60000) / 1000);
+            const display = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            const timerElement = document.getElementById('timeRemaining');
+            timerElement.textContent = display;
+            
+            // Update timer style based on remaining time
+            timerElement.className = 'value timer';
+            if (timeRemaining <= 5 * 60 * 1000) {
+                timerElement.classList.add('critical');
+            } else if (timeRemaining <= 15 * 60 * 1000) {
+                timerElement.classList.add('warning');
+            }
+        }
+
+        function endSession() {
+            showNotification('หมดเวลาการเช่าแล้ว', 'warning');
+            // Disable adding new songs
+            document.getElementById('songUrl').disabled = true;
+            document.getElementById('addedBy').disabled = true;
+        }
+
+        // YouTube Player functions
+        function initYouTubePlayer() {
+            // Load YouTube API
+            if (!window.YT) {
+                const script = document.createElement('script');
+                script.src = 'https://www.youtube.com/iframe_api';
+                document.head.appendChild(script);
+                
+                window.onYouTubeIframeAPIReady = createYouTubePlayer;
+            } else {
+                createYouTubePlayer();
+            }
+        }
+
+        function createYouTubePlayer() {
+            ytPlayer = new YT.Player('ytPlayer', {
+                height: '300',
+                width: '100%',
+                videoId: '',
+                playerVars: {
+                    'playsinline': 1,
+                    'rel': 0,
+                    'showinfo': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            console.log('YouTube player ready');
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) {
+                playNext();
+            }
+        }
+
+        function extractVideoId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // Song management
+        function addSong() {
+            const url = document.getElementById('songUrl').value.trim();
+            const addedBy = document.getElementById('addedBy').value.trim() || 'ไม่ระบุชื่อ';
+            
+            if (!url) {
+                showNotification('กรุณากรอกลิงก์ YouTube', 'error');
+                return;
+            }
+
+            const videoId = extractVideoId(url);
+            if (!videoId) {
+                showNotification('ลิงก์ YouTube ไม่ถูกต้อง', 'error');
+                return;
+            }
+
+            // Add to queue
+            const song = {
+                id: Date.now(),
+                videoId: videoId,
+                url: url,
+                title: 'กำลังโหลด...',
+                addedBy: addedBy,
+                timestamp: Date.now()
+            };
+
+            currentRoom.queue.push(song);
+            
+            // Clear inputs
+            document.getElementById('songUrl').value = '';
+            document.getElementById('addedBy').value = '';
+            
+            updateQueueDisplay();
+            showNotification('เพิ่มเพลงสำเร็จ!', 'success');
+
+            // Get video title
+            fetchVideoTitle(videoId, song.id);
+
+            // If this is the first song and no song is playing, start playing
+            if (currentRoom.queue.length === 1 && ytPlayer && ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING) {
+                playCurrentSong();
+            }
+        }
+
+        function fetchVideoTitle(videoId, songId) {
+            // Simulate fetching video title
+            setTimeout(() => {
+                const titles = [
+                    'เพลงสุดฮิต 2024',
+                    'เพลงรักเศร้า',
+                    'เพลงสากลยอดนิยม',
+                    'เพลงไทยเพราะๆ',
+                    'เพลงป๊อปสุดมันส์'
+                ];
+                const randomTitle = titles[Math.floor(Math.random() * titles.length)];
+                
+                const song = currentRoom.queue.find(s => s.id === songId);
+                if (song) {
+                    song.title = randomTitle;
+                    updateQueueDisplay();
+                }
+            }, 1000);
+        }
+
+        function handleSongUrlEnter(event) {
+            if (event.key === 'Enter') {
+                addSong();
+            }
+        }
+
+        function updateQueueDisplay() {
+            const queueContainer = document.getElementById('songQueue');
+            
+            if (currentRoom.queue.length === 0) {
+                queueContainer.innerHTML = '<p style="text-align: center; color: #6c757d; padding: 20px;">ยังไม่มีเพลงในคิว</p>';
+                return;
+            }
+
+            queueContainer.innerHTML = currentRoom.queue.map((song, index) => `
+                <div class="queue-item ${index === currentSongIndex ? 'current' : ''}">
+                    <div class="song-info">
+                        <div class="song-title">${song.title}</div>
+                        <div class="song-added-by">เพิ่มโดย: ${song.addedBy}</div>
+                    </div>
+                    <div class="queue-controls">
+                        ${isMaster ? `
+                            <button class="btn btn-secondary" onclick="moveSongUp(${index})" ${index === 0 ? 'disabled' : ''}>↑</button>
+                            <button class="btn btn-secondary" onclick="moveSongDown(${index})" ${index === currentRoom.queue.length - 1 ? 'disabled' : ''}>↓</button>
+                            <button class="btn btn-danger" onclick="removeSong(${index})">×</button>
+                        ` : ''}
+                        <button class="btn btn-secondary" onclick="openYouTube('${song.url}')">🔗</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function playCurrentSong() {
+            if (currentRoom.queue.length === 0 || !ytPlayer) return;
+            
+            const currentSong = currentRoom.queue[currentSongIndex];
+            if (currentSong) {
+                ytPlayer.loadVideoById(currentSong.videoId);
+                updateQueueDisplay();
+            }
+        }
+
+        function playNext() {
+            if (currentSongIndex < currentRoom.queue.length - 1) {
+                currentSongIndex++;
+                playCurrentSong();
+                showNotification('เล่นเพลงถัดไป', 'success');
+            } else {
+                showNotification('เล่นเพลงในคิวหมดแล้ว', 'warning');
+            }
+        }
+
+        function moveSongUp(index) {
+            if (index > 0 && index !== currentSongIndex) {
+                const temp = currentRoom.queue[index];
+                currentRoom.queue[index] = currentRoom.queue[index - 1];
+                currentRoom.queue[index - 1] = temp;
+                
+                // Adjust current song index if needed
+                if (currentSongIndex === index - 1) {
+                    currentSongIndex = index;
+                } else if (currentSongIndex === index) {
+                    currentSongIndex = index - 1;
+                }
+                
+                updateQueueDisplay();
+            }
+        }
+
+        function moveSongDown(index) {
+            if (index < currentRoom.queue.length - 1 && index !== currentSongIndex) {
+                const temp = currentRoom.queue[index];
+                currentRoom.queue[index] = currentRoom.queue[index + 1];
+                currentRoom.queue[index + 1] = temp;
+                
+                // Adjust current song index if needed
+                if (currentSongIndex === index + 1) {
+                    currentSongIndex = index;
+                } else if (currentSongIndex === index) {
+                    currentSongIndex = index + 1;
+                }
+                
+                updateQueueDisplay();
+            }
+        }
+
+        function removeSong(index) {
+            if (confirm('ต้องการลบเพลงนี้จากคิวหรือไม่?')) {
+                currentRoom.queue.splice(index, 1);
+                
+                // Adjust current song index
+                if (currentSongIndex > index) {
+                    currentSongIndex--;
+                } else if (currentSongIndex === index && currentSongIndex >= currentRoom.queue.length) {
+                    currentSongIndex = Math.max(0, currentRoom.queue.length - 1);
+                }
+                
+                updateQueueDisplay();
+                showNotification('ลบเพลงแล้ว', 'success');
+            }
+        }
+
+        function openYouTube(url) {
+            window.open(url, '_blank');
+        }
+
+        // Share functions
+        function showShareOptions() {
+            document.getElementById('shareRoomId').value = currentRoom.id;
+            document.getElementById('shareRoomUrl').value = `${window.location.origin}${window.location.pathname}?room=${currentRoom.id}`;
+            
+            // Generate QR Code
+            const canvas = document.getElementById('qrCode');
+            QRCode.toCanvas(canvas, `${window.location.origin}${window.location.pathname}?room=${currentRoom.id}`, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#667eea',
+                    light: '#ffffff'
+                }
+            });
+            
+            document.getElementById('shareModal').classList.remove('hidden');
+        }
+
+        function hideShareOptions() {
+            document.getElementById('shareModal').classList.add('hidden');
+        }
+
+        function copyRoomId() {
+            const roomIdInput = document.getElementById('shareRoomId');
+            roomIdInput.select();
+            document.execCommand('copy');
+            showNotification('คัดลอกรหัสห้องแล้ว!', 'success');
+        }
+
+        function copyRoomUrl() {
+            const roomUrlInput = document.getElementById('shareRoomUrl');
+            roomUrlInput.select();
+            document.execCommand('copy');
+            showNotification('คัดลอกลิงก์แล้ว!', 'success');
+        }
+
+        // Master controls
+        function showExtendTime() {
+            const hours = prompt('ต้องการต่อเวลากี่ชั่วโมง?', '1');
+            if (hours && !isNaN(hours) && hours > 0) {
+                const additionalTime = parseInt(hours) * 60 * 60 * 1000;
+                timeRemaining += additionalTime;
+                currentRoom.endTime += additionalTime;
+                
+                const pricePerHour = hours >= 4 ? 15 : 20;
+                const cost = parseInt(hours) * pricePerHour;
+                
+                showNotification(`ต่อเวลา ${hours} ชั่วโมง (${cost} บาท)`, 'success');
+            }
+        }
+
+        function showTransferMaster() {
+            const memberList = currentRoom.members.filter(id => id !== userId);
+            if (memberList.length === 0) {
+                showNotification('ไม่มีสมาชิกอื่นในห้อง', 'warning');
+                return;
+            }
+            
+            if (confirm('ต้องการโอนสิทธิ์เครื่องหลักหรือไม่?')) {
+                // Simulate transfer
+                const newMaster = memberList[0];
+                currentRoom.masterId = newMaster;
+                isMaster = false;
+                
+                document.getElementById('masterControls').classList.add('hidden');
+                showNotification('โอนสิทธิ์แล้ว', 'success');
+            }
+        }
+
+        function toggleGuestForm() {
+            currentRoom.enableGuestForm = !currentRoom.enableGuestForm;
+            const status = currentRoom.enableGuestForm ? 'เปิด' : 'ปิด';
+            showNotification(`${status}ฟอร์มเข้าห้องแล้ว`, 'success');
+            updatePendingRequests();
+        }
+
+        function updatePendingRequests() {
+            const section = document.getElementById('pendingRequestsSection');
+            const container = document.getElementById('pendingRequests');
+            
+            if (currentRoom.pendingRequests.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            section.classList.remove('hidden');
+            container.innerHTML = currentRoom.pendingRequests.map(request => `
+                <div class="request-item">
+                    <div>
+                        <strong>${request.name}</strong>
+                        ${request.reason ? `<br><small>${request.reason}</small>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-success" onclick="approveRequest('${request.userId}')">อนุมัติ</button>
+                        <button class="btn btn-danger" onclick="rejectRequest('${request.userId}')">ปฏิเสธ</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function approveRequest(requestUserId) {
+            const requestIndex = currentRoom.pendingRequests.findIndex(req => req.userId === requestUserId);
+            if (requestIndex !== -1) {
+                const request = currentRoom.pendingRequests[requestIndex];
+                currentRoom.members.push(requestUserId);
+                currentRoom.pendingRequests.splice(requestIndex, 1);
+                
+                showNotification(`อนุมัติ ${request.name} แล้ว`, 'success');
+                updatePendingRequests();
+            }
+        }
+
+        function rejectRequest(requestUserId) {
+            const requestIndex = currentRoom.pendingRequests.findIndex(req => req.userId === requestUserId);
+            if (requestIndex !== -1) {
+                const request = currentRoom.pendingRequests[requestIndex];
+                currentRoom.pendingRequests.splice(requestIndex, 1);
+                
+                showNotification(`ปฏิเสธ ${request.name} แล้ว`, 'warning');
+                updatePendingRequests();
+            }
+        }
+
+        // Leave room
+        function leaveRoom() {
+            if (confirm('ต้องการออกจากห้องหรือไม่?')) {
+                if (timerInterval) clearInterval(timerInterval);
+                currentRoom = null;
+                isMaster = false;
+                currentSongIndex = 0;
+                timeRemaining = 0;
+                
+                showHome();
+                showNotification('ออกจากห้องแล้ว', 'success');
+            }
+        }
+
+        // URL parameter handling
+        function checkUrlParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomId = urlParams.get('room');
+            
+            if (roomId) {
+                document.getElementById('joinRoomId').value = roomId;
+                showJoinRoom();
+            }
+        }
+
+        // Initialize app
+        function initApp() {
+            checkUrlParams();
+            
+            // Set default user name (with fallback)
+            try {
+                const savedName = localStorage.getItem('musicQueue_userName');
+                if (savedName) {
+                    document.getElementById('addedBy').value = savedName;
+                }
+            } catch (e) {
+                console.log('localStorage not available');
+            }
+        }
+
+        // Save user name when typing (with fallback for environments without localStorage)
+        document.addEventListener('DOMContentLoaded', function() {
+            const addedByInput = document.getElementById('addedBy');
+            if (addedByInput) {
+                // Load saved name if available
+                try {
+                    const savedName = localStorage.getItem('musicQueue_userName');
+                    if (savedName) {
+                        addedByInput.value = savedName;
+                    }
+                } catch (e) {
+                    console.log('localStorage not available');
+                }
+                
+                // Save name when typing
+                addedByInput.addEventListener('input', function() {
+                    try {
+                        localStorage.setItem('musicQueue_userName', this.value);
+                    } catch (e) {
+                        console.log('localStorage not available');
+                    }
+                });
+            }
+        });
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Handle browser back button
+        window.addEventListener('popstate', function() {
+            if (!currentRoom) {
+                showHome();
+            }
+        });
+    </script>
+</body>
+</html>
